@@ -1,0 +1,11 @@
+required libraries:
+    libboost-all-dev (sudo apt-get install libboost-all-dev) see http://www.boost.org/
+
+clang format style:
+    Google
+
+to install:
+make
+
+to test:
+./bin/run --fname ./test/test.ini --conf_num 1
