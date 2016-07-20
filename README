@@ -1,5 +1,6 @@
 required libraries:
     libboost-all-dev (sudo apt-get install libboost-all-dev) see http://www.boost.org/
+    hdf5
 
 clang format style:
     Google
@@ -9,3 +10,101 @@ make
 
 to test:
 ./bin/run --fname ./test/test.ini --conf_num 1
+
+Format of the configuration file
+
+in_dir : The path to the directory of input files.
+
+out_dir : The path to the directory for output files.
+
+response_model : The data-generating model. It can be a fixed distribution (options are 'Binomial', 'Gamma', 'Inverse Gaussian', 'Negative Binomial', 'Poisson' and 'ZTP'). It can be a Gaussian mixture model clustering users ('UserGMM') or items ('ItemGMM'). It can be a Poisson mixture model clustering users ('UserPMM') or items ('ItemPMM'). It can be a Probabilistic Matrix Factorization ('PMF') or Hierarchical Poisson Factorization ('HPF'). Finally, it can be a regression model ('Regression'). If doing regression, there has to be a 'xreg.h5' file.
+
+sparsity_model : The sparsity encoding model (aka missing data pattern). The first option is 'None' where the data is assumed MCAR. The response model is trained by sampling the non-missing entries only. The second option is 'HCPF' where the sparsity model is an HPF and the coupling is achieved through compounding (see http://arxiv.org/abs/1604.03853). The third option is 'HICPF' where the sparsity model is an HPF and the coupling is achieved through a linear function.
+
+dataset : The name of the dataset.
+
+sample_method : The sampling method used to train the model. The first option is 'nonmissing' where only the non-missing entries are sampled. The second option is 'full' where both missing and non-missing entries are sampled. The third option is 'binary' where the dataset is binarized and the model is trained on the full dataset.
+
+batchsize : The number of sample points each thread process in each iteration. It also determines the frequency (in terms of the number of samples) of hyperparameter update
+
+test_every : The frequency (in terms of the number of iterations) of testing
+
+save_pred_every : The frequency (in terms of the number of iterations) of saving predictions to disk
+
+save_every : The frequency (in terms of the number of iterations) of saving the model to disk. For large models this can be time-consuming.
+
+max_iter : The limit on the number of iterations
+
+n_component : The number of components in mixture and factorization models. The number of factors in sparsity model is also set to this number
+
+xi : The learning rate decay parameter for stochastic variational inference. It should be between 0.5 and 1.0
+
+tau : The learning rate delay parameter for stochastic variational inference
+
+test_ratio : The ratio of the size of the testing dataset to the full dataset
+
+validation_ratio : The ratio of the size of the validation dataset to the full dataset
+
+
+Example 1:
+Suppose we have missing completely at random (MCAR) data and we want to fit a Gaussian mixture model with 40 components to cluster users, then we can use the following configuration
+
+[100]
+in_dir = ./test/data/yelp_250k/
+out_dir = ./test/data/yelp_250k/
+response_model = UserGMM
+sparsity_model = None
+dataset = yelp_250k
+sample_method = nonmissing
+batchsize = 100000
+test_every = 1
+save_pred_every = 100
+save_every = 100
+max_iter = 100
+n_component = 40
+xi = 0.7
+tau = 10000
+test_ratio = 0.2
+validation_ratio = 0.01
+
+Example 2:
+Suppose we have missing not at random (MNAR) data and we want to fit a Gaussian mixture model with 40 components to cluster users and we want to use HCPF to decode the missing-data pattern. Then, we can use the following configuration
+
+[104]
+in_dir = ./test/data/yelp_250k/
+out_dir = ./test/data/yelp_250k/
+response_model = UserGMM
+sparsity_model = HCPF
+dataset = yelp_250k
+sample_method = full
+batchsize = 100000
+test_every = 1
+save_pred_every = 100
+save_every = 100
+max_iter = 100
+n_component = 40
+xi = 0.7
+tau = 10000
+test_ratio = 0.2
+validation_ratio = 0.01
+
+Example 3:
+Suppose we have missing not at random (MNAR) data and we want to fit a Gaussian mixture model with 40 components to cluster users and we want to use HICPF to decode the missing-data pattern. Then, we can use the following configuration
+
+[107]
+in_dir = ./test/data/yelp_250k/
+out_dir = ./test/data/yelp_250k/
+response_model = UserGMM
+sparsity_model = HICPF
+dataset = yelp_250k
+sample_method = full
+batchsize = 100000
+test_every = 1
+save_pred_every = 100
+save_every = 100
+max_iter = 100
+n_component = 40
+xi = 0.7
+tau = 10000
+test_ratio = 0.2
+validation_ratio = 0.01
